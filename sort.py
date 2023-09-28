@@ -1,6 +1,7 @@
 import heapq
 import struct
 
+
 def read_and_sort(input, sorted_filename, M):
     in_file = open(input, 'rb')
     chunk_names = []
@@ -25,42 +26,26 @@ def read_and_sort(input, sorted_filename, M):
     in_file.close()
     k_way_merge_chunks(chunk_names, sorted_filename)
 
+    
 def k_way_merge_chunks(chunk_names, sorted_filename):
     final_out = open(sorted_filename, 'wb')
     K = len(chunk_names)
     heap = []
     reading_buffers = []
-    iterators = []
     for i in range(K):
         reading_buffers.append(open(chunk_names[i], 'rb'))
-
-        iterators.append(struct.iter_unpack('I', open(chunk_names[i], 'rb').read()))
-
-        # first_element_data = struct.unpack('I', reading_buffers[i].read(4))[0]
-        first_element_data = next(iterators[i])[0]
+        first_element_data = struct.unpack('I', reading_buffers[i].read(4))[0]
         heapq.heappush(heap, (first_element_data, i))
-    while True:
-        try:
-            ele, idx = heapq.heappop(heap)
-        except:
-            break
+    while len(heap) > 0:
+        ele, idx = heapq.heappop(heap)
         final_out.write(struct.pack('I', ele))
-        # rw = reading_buffers[idx].read(4)
-        # if len(rw) != 4:
-        #     continue
-        # next_element_data = struct.unpack('I', rw)[0]
-        try:
-            next_element_data = next(iterators[idx])[0]
-        except StopIteration:
+        rw = reading_buffers[idx].read(4)
+        if len(rw) != 4:
             continue
-        except Exception as e:
-            print("error happened during reading from iterator: " + e)
-
+        next_element_data = struct.unpack('I', rw)[0]
         heapq.heappush(heap, (next_element_data, idx))
     
     final_out.close()
     for f in reading_buffers:
         f.close()
     
-# with Pool(5) as p:
-#         print(p.map(f, [1, 2, 3]))
